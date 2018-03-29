@@ -13,6 +13,7 @@ Open the file 'maze' and change whatever you want, just follow those rules :
 - 'S' is for your Starting position.
 - 'E' is for the End of the maze (which is the guard).
 - ' ' (space) is for the ground.
+
 Default size is 15x15 but you can go 10x10 or 20x20 or whatever, just keep it square !!!
 
 You can also change :
