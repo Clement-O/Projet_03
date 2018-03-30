@@ -13,7 +13,8 @@ Open the file 'maze' and change whatever you want, just follow those rules :
 - 'S' is for your Starting position.
 - 'E' is for the End of the maze (which is the guard).
 - ' ' (space) is for the ground.
-Keep it square ! Default is 15*15 but you can go 10*10 or 20*20 or whatever, just keep it square !
+
+Default size is 15x15 but you can go 10x10 or 20x20 or whatever, just keep it square !!!
 
 You can also change :
 - The sprites (1) : in sprites directory, just keep the name and the ".png" format.
