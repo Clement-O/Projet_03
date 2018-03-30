@@ -244,39 +244,35 @@ class Cartridge:
         settings.WINDOW.fill((0, 0, 0), (0, settings.WINDOW_HEIGHT, settings.WINDOW_WIDTH, settings.SPRITE_SIZE_H))
         # ((Color), (X, Y, Width, Height))
 
+        text_str = ""
+        text = settings.FONT.render(text_str, 0, (250, 250, 250))
+
         # If movement is impossible (because wall) :
         if self.character.impossible:
             text_str = "IMPOSSIBLE MOVE " + self.character.direction + " !"
             text = settings.FONT.render(text_str, 0, (250, 250, 250))
-            text_width = text.get_width()
-            text_height = text.get_height()
-            text_left = settings.WINDOW_WIDTH / 2 - text_width / 2
-            text_top = settings.WINDOW_HEIGHT + (settings.CARTRIDGE_H / 2 - text_height / 2)
-            settings.WINDOW.blit(text, (text_left, text_top))
 
         # Check if character has all the item. Win or Lose.
         if self.character.x == self.maze.guard_x and self.character.y == self.maze.guard_y:
             if self.character.inventory == settings.NB_ITEM:
-                text = settings.FONT.render("YOU WON !", 0, (250, 250, 250))
-                text_width = text.get_width()
-                text_height = text.get_height()
-                text_left = settings.WINDOW_WIDTH / 2 - text_width / 2
-                text_top = settings.WINDOW_HEIGHT + (settings.CARTRIDGE_H / 2 - text_height / 2)
-                settings.WINDOW.blit(text, (text_left, text_top))
+                text_str = "YOU KNOCK THE GUARD AND GAIN FREEDOM !"
+                text = settings.FONT.render(text_str, 0, (250, 250, 250))
             if self.character.inventory != settings.NB_ITEM:
-                text = settings.FONT.render("YOU LOST !", 0, (250, 250, 250))
-                text_width = text.get_width()
-                text_height = text.get_height()
-                text_left = settings.WINDOW_WIDTH / 2 - text_width / 2
-                text_top = settings.WINDOW_HEIGHT + (settings.CARTRIDGE_H / 2 - text_height / 2)
-                settings.WINDOW.blit(text, (text_left, text_top))
+                inventory = settings.NB_ITEM - self.character.inventory
+                if inventory == 1:
+                    text_str = "GAME OVER ! YOU MISSED : " + str(inventory) + " ITEM !"
+                    text = settings.FONT.render(text_str, 0, (250, 250, 250))
+                else:
+                    text_str = "GAME OVER ! YOU MISSED : " + str(inventory) + " ITEMS !"
+                    text = settings.FONT.render(text_str, 0, (250, 250, 250))
 
         # Else if movement is possible and character isn't at the end, print inventory state
         elif self.character.impossible == 0:
             text_str = "YOU HAVE " + str(self.character.inventory) + " ITEMS OUT OF " + str(settings.NB_ITEM) + " !"
             text = settings.FONT.render(text_str, 0, (250, 250, 250))
-            text_width = text.get_width()
-            text_height = text.get_height()
-            text_left = settings.WINDOW_WIDTH / 2 - text_width / 2
-            text_top = settings.WINDOW_HEIGHT + (settings.CARTRIDGE_H / 2 - text_height / 2)
-            settings.WINDOW.blit(text, (text_left, text_top))
+
+        text_width = text.get_width()
+        text_height = text.get_height()
+        text_left = settings.WINDOW_WIDTH / 2 - text_width / 2
+        text_top = settings.WINDOW_HEIGHT + (settings.CARTRIDGE_H / 2 - text_height / 2)
+        settings.WINDOW.blit(text, (text_left, text_top))

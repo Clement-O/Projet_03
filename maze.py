@@ -54,7 +54,7 @@ def main():
 
             # If character is at the end, pause program and quit.
             if character.x == maze.guard_x and character.y == maze.guard_y:
-                pygame.time.wait(1000)
+                pygame.time.wait(2000)
                 loop = 0
 
 
