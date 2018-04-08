@@ -8,239 +8,177 @@ Contain every needed classes for the main function.
 """
 
 
-class Maze:
-    """
-    Create the base maze and additional items to have a complete maze.
-    """
+class File:
+    """" "Read" the maze file and stock every data the script might use later """
+    # Maze List #
+    MAZE_GRID = []
+    MAZE_WALL = []
+    MAZE_GROUND = []
+    MAZE_POSSIBLE_ITEM = []
+    # Maze Starting Position #
+    INIT_CHARACTER_COLUMN = 0  # X Axis
+    INIT_CHARACTER_LINE = 0  # Y Axis
+    INIT_CHARACTER_X = 0
+    INIT_CHARACTER_Y = 0
+    GUARD_X = 0
+    GUARD_Y = 0
 
     def __init__(self, file):
         self.file = file
 
-        self.guard_x = 0
-        self.guard_y = 0
-
-    def create(self):
-        """
-        Create and blit the base maze.
-        :return:
-        """
+    def read(self):
+        """ "Read" the maze file and stock every data the script might use later """
         with open(self.file, 'r') as data:
-            line_number = 0  # Y Axis
-            for line in data:
-                column_number = 0  # X Axis
-                for letter in line:
-                    x = column_number * settings.SPRITE_SIZE_W  # X in pixel
-                    y = line_number * settings.SPRITE_SIZE_H  # Y in pixel
+            for line, value in enumerate(data):
+                maze_line = []
+                for column, letter in enumerate(value):
+                    maze_wall_xy = []
+                    maze_ground_xy = []
+                    maze_possible_item_xy = []
+                    x = column * settings.SPRITE_SIZE_W
+                    y = line * settings.SPRITE_SIZE_W
                     if letter != '\n':
                         if letter == 'w':
-                            settings.WINDOW.blit(settings.WALL, (x, y))
-                        elif letter == 'E':
-                            self.guard_x = column_number * settings.SPRITE_SIZE_W
-                            self.guard_y = line_number * settings.SPRITE_SIZE_H
-                            settings.WINDOW.blit(settings.GROUND, (self.guard_x, self.guard_y))
+                            maze_wall_xy.append(x)
+                            maze_wall_xy.append(y)
+                            File.MAZE_WALL.append(maze_wall_xy)
                         else:
-                            settings.WINDOW.blit(settings.GROUND, (x, y))
-                    column_number += 1
-                line_number += 1
-
-    def additional(self, loot, character):
-        """
-        Check if character is on items or at the end (or not) and blit the needed sprites (items / character / guard).
-        :param loot: List of items to blit.
-        :param character: Character and guard position.
-        :return:
-        """
-        loot = loot
-        character = character
-
-        if character.x == self.guard_x and character.y == self.guard_y:
-            if character.inventory == settings.NB_ITEM:
-                settings.WINDOW.blit(settings.CHARACTER, (character.x, character.y))
-            else:
-                settings.WINDOW.blit(settings.GUARD, (self.guard_x, self.guard_y))
-        else:
-            settings.WINDOW.blit(settings.CHARACTER, (character.x, character.y))
-            settings.WINDOW.blit(settings.GUARD, (self.guard_x, self.guard_y))
-
-        i = 0
-        while i < len(loot.random_list):
-            item_column = loot.random_list[i][0]
-            item_line = loot.random_list[i][1]
-            x = item_column * settings.SPRITE_SIZE_W
-            y = item_line * settings.SPRITE_SIZE_H
-            if character.column == item_column and character.line == item_line:
-                settings.WINDOW.blit(settings.CHARACTER, (character.x, character.y))
-                i += 1
-            else:
-                settings.WINDOW.blit(settings.ITEM, (x, y))
-                i += 1
+                            maze_ground_xy.append(x)
+                            maze_ground_xy.append(y)
+                            File.MAZE_GROUND.append(maze_ground_xy)
+                            if letter == ' ':
+                                maze_possible_item_xy.append(x)
+                                maze_possible_item_xy.append(y)
+                                File.MAZE_POSSIBLE_ITEM.append(maze_possible_item_xy)
+                            if letter == 'S':
+                                File.INIT_CHARACTER_COLUMN = column
+                                File.INIT_CHARACTER_LINE = line
+                                File.INIT_CHARACTER_X = x
+                                File.INIT_CHARACTER_Y = y
+                            if letter == 'E':
+                                File.GUARD_X = x
+                                File.GUARD_Y = y
+                        maze_line.append(letter)
+                File.MAZE_GRID.append(maze_line)
 
 
 class Loot:
-    """
-    Calculate the position of the loot.
-    """
+    """ Calculate the loot's position. """
 
-    def __init__(self, file):
-        self.file = file
-        self.possible_list = []
-        self.random_list = []
+    def __init__(self):
+        self.item_list = []
 
-    def available_list(self):
-        """
-        Calculate the possible position list for items.
-        :return:
-        """
-        with open(self.file) as data:
-            line_number = 0  # Y Axis
-            for line in data:
-                column_number = 0  # X Axis
-                for letter in line:
-                    random_cl = []
-                    if letter == ' ':
-                        random_cl.append(column_number)
-                        random_cl.append(line_number)
-                        self.possible_list.append(random_cl)
-                    column_number += 1
-                line_number += 1
-
-    def random_item_list(self):
-        """
-        Choose a number of random items (based on settings) from the get_random() property.
-        :return:
-        """
-        item = 0
-        while item < settings.NB_ITEM:
-            self.random_list.append(self.get_random)
-            item += 1
-
-    @property
-    def get_random(self):
-        """
-        Pick a random position for one item from the possible list and delete it (to avoid picking it twice).
-        :return:
-        """
-        number = random.randint(0, len(self.possible_list) - 1)
-        item_cl = self.possible_list[number]
-        del self.possible_list[number]
-        return item_cl
+    def random_list(self):
+        """ Choose a list of X (based on settings) random items from the maze possible item list. """
+        self.item_list = random.sample(File.MAZE_POSSIBLE_ITEM, settings.NB_ITEM)
 
 
 class Character:
-    """
-    Calculate the initial character position and the new one after each event.
-    """
+    """ Calculate the initial character position and the new one after each event. """
 
-    def __init__(self, file, loot):
-        self.file = file
+    def __init__(self, loot):
         self.loot = loot
-
-        self.column = 0  # X Axis
-        self.line = 0  # Y Axis
-        self.x = 0
-        self.y = 0
-        self.grid = []
-        self.impossible = 0
-        self.direction = 0
-
+        # Positions #
+        self.column = File.INIT_CHARACTER_COLUMN  # X Axis
+        self.line = File.INIT_CHARACTER_LINE  # Y Axis
+        self.x = File.INIT_CHARACTER_X
+        self.y = File.INIT_CHARACTER_Y
+        # Used externally #
+        self.move_impossible = False
+        self.move_direction = ""
         self.inventory = 0
-
-    def position(self):
-        """
-        Initial character position in coordinates and pixel.
-        :return:
-        """
-        with open(self.file) as data:
-            grid_line = []  # grid [Y Axis]
-            line_number = 0  # Y Axis
-            for line in data:
-                grid_column = []  # grid [X Axis]
-                column_number = 0  # X Axis
-                for letter in line:
-                    if letter != '\n':
-                        if letter == 'S':
-                            self.column = column_number
-                            self.line = line_number
-                            self.x = column_number * settings.SPRITE_SIZE_W
-                            self.y = line_number * settings.SPRITE_SIZE_H
-                    grid_column.append(letter)
-                    column_number += 1
-                grid_line.append(grid_column)
-                line_number += 1
-            self.grid = grid_line
 
     def move(self, direction):
         """
         Calculate every new position after an event. If the new position is unavailable (wall), let him at his current
         position and send a bool into a variable (used later to display message).
         :param direction: From the keyboard event.
-        :return:
         """
-        self.impossible = 0
+        self.move_impossible = False
         if direction == 'up':
             if self.y > 0:  # Can't go above y0
-                if self.grid[self.line - 1][self.column] != 'w':  # Check if the new position has wall
+                if File.MAZE_GRID[self.line - 1][self.column] != 'w':  # Check if the new position has wall
                     self.line -= 1  # If not y-1
                     self.y = self.line * settings.SPRITE_SIZE_H  # New position in pixel
                 else:  # If wall
-                    self.impossible = 1
-                    self.direction = "UP"
+                    self.move_impossible = True
+                    self.move_direction = "UP"
         if direction == 'down':
             if self.y < (settings.WINDOW_HEIGHT - settings.SPRITE_SIZE_H):
-                if self.grid[self.line + 1][self.column] != 'w':
+                if File.MAZE_GRID[self.line + 1][self.column] != 'w':
                     self.line += 1
                     self.y = self.line * settings.SPRITE_SIZE_H
                 else:  # If wall
-                    self.impossible = 1
-                    self.direction = "DOWN"
+                    self.move_impossible = True
+                    self.move_direction = "DOWN"
         if direction == 'right':
             if self.x < (settings.WINDOW_WIDTH - settings.SPRITE_SIZE_W):
-                if self.grid[self.line][self.column + 1] != 'w':
+                if File.MAZE_GRID[self.line][self.column + 1] != 'w':
                     self.column += 1
                     self.x = self.column * settings.SPRITE_SIZE_W
                 else:  # If wall
-                    self.impossible = 1
-                    self.direction = "RIGHT"
+                    self.move_impossible = True
+                    self.move_direction = "RIGHT"
         if direction == 'left':
             if self.x > 0:
-                if self.grid[self.line][self.column - 1] != 'w':
+                if File.MAZE_GRID[self.line][self.column - 1] != 'w':
                     self.column -= 1
                     self.x = self.column * settings.SPRITE_SIZE_W
                 else:  # If wall
-                    self.impossible = 1
-                    self.direction = "LEFT"
+                    self.move_impossible = True
+                    self.move_direction = "LEFT"
 
     def item(self):
-        """
-        Look if the character position is on an items. If yes: delete this item and inventory += 1.
-        :return:
-        """
-        i = 0
-        while i < len(self.loot.random_list):
-            item_column = self.loot.random_list[i][0]
-            item_line = self.loot.random_list[i][1]
-            if self.column == item_column and self.line == item_line:
+        """ Look if the character position is on an items. If yes: delete this item and inventory += 1. """
+        for i, item in enumerate(self.loot.item_list):
+            if self.x == item[0] and self.y == item[1]:
                 self.inventory += 1
-                del self.loot.random_list[i]
+                del self.loot.item_list[i]
+
+
+class Maze:
+    """ Create the base maze and additional items to have a complete maze. """
+
+    def __init__(self, character, loot):
+        self.character = character
+        self.loot = loot
+
+    @staticmethod
+    def create():
+        """ Create and blit the base maze. """
+        for index, position in enumerate(File.MAZE_WALL):
+            settings.WINDOW.blit(settings.WALL, (position[0], position[1]))
+        for index, position in enumerate(File.MAZE_GROUND):
+            settings.WINDOW.blit(settings.GROUND, (position[0], position[1]))
+
+    def additional(self):
+        """ Check if character is on items or at the end (or not) and blit the needed sprites. """
+        # If Character is at the end with ou without all the items #
+        if self.character.x == File.GUARD_X and self.character.y == File.GUARD_Y:
+            if self.character.inventory == settings.NB_ITEM:
+                settings.WINDOW.blit(settings.CHARACTER, (self.character.x, self.character.y))
             else:
-                i += 1
+                settings.WINDOW.blit(settings.GUARD, (File.GUARD_X, File.GUARD_Y))
+        else:
+            settings.WINDOW.blit(settings.CHARACTER, (self.character.x, self.character.y))
+            settings.WINDOW.blit(settings.GUARD, (File.GUARD_X, File.GUARD_Y))
+
+        # If Character is on a item #
+        for i, item in enumerate(self.loot.item_list):
+            if self.character.x == item[0] and self.character.y == item[1]:
+                settings.WINDOW.blit(settings.CHARACTER, (self.character.x, self.character.y))
+            else:
+                settings.WINDOW.blit(settings.ITEM, (item[0], item[1]))
 
 
 class Cartridge:
-    """
-    Display every text at the bottom of the window.
-    """
+    """ Display every text at the bottom of the window. """
 
-    def __init__(self, maze, loot, character):
-        self.maze = maze
-        self.loot = loot
+    def __init__(self, character):
         self.character = character
 
     def display(self):
-        """
-        Take parameter in (such as the impossible movement from Character class.) and display it.
-        :return:
-        """
+        """ Take parameter in (such as the impossible movement from Character class.) and display it. """
         settings.WINDOW.fill((0, 0, 0), (0, settings.WINDOW_HEIGHT, settings.WINDOW_WIDTH, settings.SPRITE_SIZE_H))
         # ((Color), (X, Y, Width, Height))
 
@@ -248,12 +186,12 @@ class Cartridge:
         text = settings.FONT.render(text_str, 0, (250, 250, 250))
 
         # If movement is impossible (because wall) :
-        if self.character.impossible:
-            text_str = "IMPOSSIBLE MOVE " + self.character.direction + " !"
+        if self.character.move_impossible is True:
+            text_str = "IMPOSSIBLE MOVE " + self.character.move_direction + " !"
             text = settings.FONT.render(text_str, 0, (250, 250, 250))
 
         # Check if character has all the item. Win or Lose.
-        if self.character.x == self.maze.guard_x and self.character.y == self.maze.guard_y:
+        if self.character.x == File.GUARD_X and self.character.y == File.GUARD_Y:
             if self.character.inventory == settings.NB_ITEM:
                 text_str = "YOU KNOCK THE GUARD AND GAIN FREEDOM !"
                 text = settings.FONT.render(text_str, 0, (250, 250, 250))
@@ -267,10 +205,11 @@ class Cartridge:
                     text = settings.FONT.render(text_str, 0, (250, 250, 250))
 
         # Else if movement is possible and character isn't at the end, print inventory state
-        elif self.character.impossible == 0:
+        elif self.character.move_impossible is False:
             text_str = "YOU HAVE " + str(self.character.inventory) + " ITEMS OUT OF " + str(settings.NB_ITEM) + " !"
             text = settings.FONT.render(text_str, 0, (250, 250, 250))
 
+        # Center the text on the cartridge #
         text_width = text.get_width()
         text_height = text.get_height()
         text_left = settings.WINDOW_WIDTH / 2 - text_width / 2

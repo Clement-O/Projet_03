@@ -9,20 +9,21 @@ Contain the main function.
 
 
 def main():
-    """
-    Init everything, look for event and quit at the end.
-    :return:
-    """
-    maze = classes.Maze('maze')
+    """ Init everything, look for event and quit at the end. """
 
-    loot = classes.Loot('maze')
-    loot.available_list()
-    loot.random_item_list()
+    file = classes.File('maze')
+    file.read()
 
-    character = classes.Character('maze', loot)
-    character.position()
+    loot = classes.Loot()
+    loot.random_list()
 
-    cartridge = classes.Cartridge(maze, loot, character)
+    character = classes.Character(loot)
+
+    maze = classes.Maze(character, loot)
+
+    cartridge = classes.Cartridge(character)
+
+    pygame.key.set_repeat(150, 200)
 
     loop = 1
     while loop:
@@ -44,7 +45,7 @@ def main():
             # Create the base maze
             maze.create()
             # Add item, character and guard to the maze
-            maze.additional(loot, character)
+            maze.additional()
             # Check if inventory item += 1
             character.item()
             # Display text
@@ -53,7 +54,7 @@ def main():
             pygame.display.flip()
 
             # If character is at the end, pause program and quit.
-            if character.x == maze.guard_x and character.y == maze.guard_y:
+            if character.x == file.GUARD_X and character.y == file.GUARD_Y:
                 pygame.time.wait(2000)
                 loop = 0
 
